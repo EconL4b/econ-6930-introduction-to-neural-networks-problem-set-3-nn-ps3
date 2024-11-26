@@ -1,0 +1,104 @@
+Question 1: Basic Architecture of a Neural Network\
+import numpy as np\
+\
+def initialize_parameters(input_size, hidden_size1, hidden_size2, output_size):\
+    np.random.seed(0)\
+    W1 = np.random.randn(hidden_size1, input_size) * 0.01\
+    b1 = np.zeros((hidden_size1, 1))\
+    W2 = np.random.randn(hidden_size2, hidden_size1) * 0.01\
+    b2 = np.zeros((hidden_size2, 1))\
+    W3 = np.random.randn(output_size, hidden_size2) * 0.01\
+    b3 = np.zeros((output_size, 1))\
+    return W1, b1, W2, b2, W3, b3\
+\
+input_size, hidden_size1, hidden_size2, output_size = 3, 4, 4, 1\
+W1, b1, W2, b2, W3, b3 = initialize_parameters(input_size, hidden_size1, hidden_size2, output_size)\
+print("Weights and biases initialized!")\
+\
+\
+# Question 2: Activation Functions\
+import matplotlib.pyplot as plt\
+\
+def sigmoid(x): return 1 / (1 + np.exp(-x))\
+def relu(x): return np.maximum(0, x)\
+def leaky_relu(x, alpha=0.01): return np.where(x > 0, x, alpha * x)\
+\
+x_vals = np.linspace(-10, 10, 100)\
+plt.figure(figsize=(10, 6))\
+plt.plot(x_vals, sigmoid(x_vals), label="Sigmoid", color="blue")\
+plt.plot(x_vals, relu(x_vals), label="ReLU", color="green")\
+plt.plot(x_vals, leaky_relu(x_vals), label="Leaky ReLU", color="red")\
+plt.title("Activation Functions")\
+plt.xlabel("Input")\
+plt.ylabel("Output")\
+plt.legend()\
+plt.grid()\
+plt.show()\
+\
+\
+# Question 3: Forward Propagation\
+def forward_propagation(X, W1, b1, W2, b2, W3, b3):\
+    Z1 = np.dot(W1, X) + b1\
+    A1 = relu(Z1)\
+    Z2 = np.dot(W2, A1) + b2\
+    A2 = relu(Z2)\
+    Z3 = np.dot(W3, A2) + b3\
+    A3 = sigmoid(Z3)\
+    return Z1, A1, Z2, A2, Z3, A3\
+\
+X = np.random.randn(input_size, 5)\
+Z1, A1, Z2, A2, Z3, A3 = forward_propagation(X, W1, b1, W2, b2, W3, b3)\
+print("Forward propagation complete!")\
+\
+\
+# Question 4: Overfitting and Regularization\
+def compute_loss_with_l2(Y, Y_hat, W1, W2, W3, lambd=0.1):\
+    m = Y.shape[1]\
+    mse_loss = np.mean((Y - Y_hat) ** 2)\
+    l2_penalty = (lambd / (2 * m)) * (np.sum(W1**2) + np.sum(W2**2) + np.sum(W3**2))\
+    return mse_loss + l2_penalty\
+\
+Y = np.random.randn(output_size, 5)\
+loss = compute_loss_with_l2(Y, A3, W1, W2, W3)\
+print(f"Loss with L2 regularization: \{loss:.6f\}")\
+\
+\
+# Question 5: Training a Neural Network\
+def gradient_descent(weights, biases, grad_weights, grad_biases, learning_rate):\
+    weights = weights - learning_rate * grad_weights\
+    biases = biases - learning_rate * grad_biases\
+    return weights, biases\
+\
+learning_rate, lambd = 0.01, 0.1\
+for iteration in range(10):\
+    Z1, A1, Z2, A2, Z3, predictions = forward_propagation(X, W1, b1, W2, b2, W3, b3)\
+    loss = compute_loss_with_l2(Y, predictions, W1, W2, W3, lambd)\
+    print(f"Iteration \{iteration + 1\}, Loss: \{loss:.6f\}")\
+    grad_W1, grad_b1 = np.random.randn(*W1.shape), np.random.randn(*b1.shape)\
+    grad_W2, grad_b2 = np.random.randn(*W2.shape), np.random.randn(*b2.shape)\
+    grad_W3, grad_b3 = np.random.randn(*W3.shape), np.random.randn(*b3.shape)\
+    W1, b1 = gradient_descent(W1, b1, grad_W1, grad_b1, learning_rate)\
+    W2, b2 = gradient_descent(W2, b2, grad_W2, grad_b2, learning_rate)\
+    W3, b3 = gradient_descent(W3, b3, grad_W3, grad_b3, learning_rate)\
+\
+\
+# Question 6: Adaptive Learning Rates (Adam Optimizer)\
+def adam_optimizer_step(weights, grad_weights, moment1, moment2, iteration, learning_rate, beta1=0.9, beta2=0.999, epsilon=1e-8):\
+    moment1 = beta1 * moment1 + (1 - beta1) * grad_weights\
+    moment2 = beta2 * moment2 + (1 - beta2) * (grad_weights ** 2)\
+    m1_corrected = moment1 / (1 - beta1 ** iteration)\
+    m2_corrected = moment2 / (1 - beta2 ** iteration)\
+    weights -= learning_rate * m1_corrected / (np.sqrt(m2_corrected) + epsilon)\
+    return weights, moment1, moment2\
+\
+m_W1, v_W1 = np.zeros_like(W1), np.zeros_like(W1)\
+m_W2, v_W2 = np.zeros_like(W2), np.zeros_like(W2)\
+m_W3, v_W3 = np.zeros_like(W3)\
+\
+for t in range(1, 11):\
+    Z1, A1, Z2, A2, Z3, predictions = forward_propagation(X, W1, b1, W2, b2, W3, b3)\
+    grad_W1, grad_W2, grad_W3 = np.random.randn(*W1.shape), np.random.randn(*W2.shape), np.random.randn(*W3.shape)\
+    W1, m_W1, v_W1 = adam_optimizer_step(W1, grad_W1, m_W1, v_W1, t, learning_rate)\
+    W2, m_W2, v_W2 = adam_optimizer_step(W2, grad_W2, m_W2, v_W2, t, learning_rate)\
+    W3, m_W3, v_W3 = adam_optimizer_step(W3, grad_W3, m_W3, v_W3, t, learning_rate)\
+}
